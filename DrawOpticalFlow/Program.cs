@@ -1,4 +1,6 @@
-﻿using OpenCvSharp;
+﻿using System.Security.Cryptography;
+using OpenCvSharp;
+using Range = OpenCvSharp.Range;
 
 var rnd = new Random();
 var colors = Enumerable
@@ -11,8 +13,8 @@ const int maxCorners = 100;
 // 特徴点のスコアの閾値。0~1で1が最高。
 const double qualityLevel = 0.3;
 // 特徴点間の最小距離
-const int minDistance = 100;
-//  特徴点の検出範囲を指定するマスク行列。nullだと画像全体で検出。
+const int minDistance = 7;
+// 特徴点の検出範囲を指定するマスク行列。nullだと画像全体で検出。
 Mat rangeMask = null;
 // 特徴点の検出に使用される近傍領域のサイズ
 const int blockSize = 7;
@@ -28,6 +30,14 @@ using var capture = new VideoCapture(path);
 using var frameNext = new Mat();
 var endFlag = capture.Read(frameNext);
 var grayPrev = frameNext.CvtColor(ColorConversionCodes.BGR2GRAY);
+
+// 例: 中心辺りで特徴点検出する場合
+rangeMask = Mat.Zeros(grayPrev.Size(), MatType.CV_8UC1);
+var rect = new Rect(100, 100, 200, 200);
+var center = new Point(rect.Left + rangeMask.Width / 2, rect.Top + rangeMask.Height / 2);
+var maskRegion = new Rect(center.X - rect.Width / 2, center.Y - rect.Height / 2, rect.Width, rect.Height);
+rangeMask[maskRegion].SetTo(Scalar.White);
+
 var featuresPrev =
     grayPrev.GoodFeaturesToTrack(maxCorners, qualityLevel, minDistance, rangeMask, blockSize, useHarrisDetector, k);
 using var mask = new Mat(frameNext.Size(), MatType.CV_8UC3, Scalar.All(0));

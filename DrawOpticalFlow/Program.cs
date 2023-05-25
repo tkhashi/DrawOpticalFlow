@@ -15,7 +15,8 @@ const bool useHarrisDetector = false;
 const double k = 0.04;
 
 // 最初のフレームの処理
-using var capture = new VideoCapture(@"C:\Users\k_tak\Downloads\534-21-62-2下流調査-ガタツキ部のみ.mp4");
+var path = @"";
+using var capture = new VideoCapture(path);
 using var frameNext = new Mat();
 var endFlag = capture.Read(frameNext);
 var grayPrev = frameNext.CvtColor(ColorConversionCodes.BGR2GRAY);

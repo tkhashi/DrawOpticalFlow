@@ -1,4 +1,6 @@
-﻿using DrawOpticalFlow;
+﻿using System.Collections;
+using System.Runtime.InteropServices;
+using DrawOpticalFlow;
 using OpenCvSharp;
 
 var rnd = new Random();
@@ -21,25 +23,63 @@ const int blockSize = 7;
 const bool useHarrisDetector = true;
 // ハリスのコーナー検出器で使う自由パラメータ。通常0.04~0.06を指定する。
 // 小さいとコーナーが多く検出される。大きいとより強い勾配の変化をもつ点が検出される。
-const double k = 0.06;
+const double k = 0.04;
 
 // 最初のフレームの処理
 var path = @"";
 using var capture = new VideoCapture(path);
 
-var prev = capture.RetrieveMat();
-var flow = PairFlow.Init();
-for (var i = 0; i < capture.FrameCount - 1; i++)
-{
-    using var next = capture.RetrieveMat();
 
-    flow.Calc(prev, next);
-    flow.Draw(prev);
 
-    prev.Dispose();
-    prev = next.Clone();
-}
-return;
+const int col = 5*2;
+const int row = 5*2;
+//var store = new GridStore(capture.RetrieveMat(), col, row);
+//for (var i = 0; i < capture.FrameCount - 1; i++)
+//{
+//    store.Estimate(capture.RetrieveMat());
+//    store.Draw();
+//}
+
+//return;
+
+
+
+//var prev = capture.RetrieveMat().Grid(col, row);
+//var flow = PairFlow.Init();
+//using var drawnMats = new Mat();
+//for (var i = 0; i < capture.FrameCount - 1; i++)
+//{
+//    var h = Enumerable.Repeat(new Mat(), col).ToArray();
+//    var v = Enumerable.Repeat(new Mat(), row).ToArray();
+//    var next = capture.RetrieveMat().Grid(col, row);
+//    for (var c = 0; c < col; c++)
+//    {
+//        for (var r = 0; r < row; r++)
+//        {
+//            flow.Calc(prev[c, r], next[c, r]);
+//            var d = flow.Draw(prev[c, r]);
+
+//            v[r] = d;
+//        }
+
+//        Cv2.VConcat(v, h[c]);
+//        h[c] = h[c].Clone();
+//    }
+//    Cv2.HConcat(h, drawnMats);
+//    Cv2.ImShow("drawn", drawnMats);
+//    Cv2.WaitKey();
+
+//    //flow.Calc(prev, next);
+//    //flow.Draw(prev);
+
+//    for (var c = 0; c < col; c++)
+//    for (var r = 0; r < row; r++)
+//    {
+//        prev[c, r].Dispose();
+//        prev[c, r] = next[c, r].Clone();
+//    }
+//}
+//return;
 
 // 直前のフレームの処理
 using var framePrev = capture.RetrieveMat();
@@ -55,7 +95,7 @@ var grayPrev = framePrev.CvtColor(ColorConversionCodes.BGR2GRAY)
         ;
         //.SubMatEx(framePrev);
 var featuresPrev = grayPrev.GoodFeaturesToTrack(maxCorners, qualityLevel, minDistance, rangeMask, blockSize, useHarrisDetector, k);
-using var mask = new Mat(grayPrev.Size(), MatType.CV_8UC3, Scalar.All(0));
+var mask = new Mat(grayPrev.Size(), MatType.CV_8UC3, Scalar.All(0));
 
 for (var i = 0; i < capture.FrameCount - 1; i++)
 {
@@ -82,8 +122,9 @@ for (var i = 0; i < capture.FrameCount - 1; i++)
     using var matrix = Cv2.EstimateAffinePartial2D(nextCornerMat, prevCornerMat);
     using var adjusted = frameNext.WarpAffine(matrix, frameNext.Size());
 
-    Cv2.ImShow("adjust frame", adjusted);
-    Cv2.WaitKey(1);
+    adjusted.Circle(new Point(adjusted.Width / 2, adjusted.Height / 2), 3, Scalar.Red, 1, LineTypes.AntiAlias);
+    //Cv2.ImShow("adjust frame", adjusted);
+    //Cv2.WaitKey(1);
 
     // オプティカルフローを検出した特徴点を選別（0：検出せず、1：検出した）
     for (var j = 0; j < status.Length; j++)
@@ -91,11 +132,11 @@ for (var i = 0; i < capture.FrameCount - 1; i++)
         if (status[j] == 0) continue;
 
         // オプティカルフローを描画
-        mask.Line(featuresNext[j].ToPoint(), featuresPrev[j].ToPoint(), colors[j % 100], 2);
+        mask.Line(featuresNext[j].ToPoint(), featuresPrev[j].ToPoint(), colors[j % 100], 1, LineTypes.AntiAlias);
         frameNext.Circle((int)featuresNext[j].X, (int)featuresNext[j].Y, 5, colors[j % 100], -1);
     }
     using var drawnMat = frameNext.Add(mask);
-    Cv2.ImShow("flow", drawnMat);
+    Cv2.ImShow("flow", drawnMat.ToMat().Resize(Size.Zero, 0.5, 0.5));
     Cv2.WaitKey(1);
 
     // 次のフレーム、ポイントの準備
@@ -108,6 +149,8 @@ for (var i = 0; i < capture.FrameCount - 1; i++)
     { 
         // 特徴点が見つからなかった場合、再度特徴点を検出
         featuresPrev = grayNext.GoodFeaturesToTrack(maxCorners, qualityLevel, minDistance, rangeMask, blockSize, useHarrisDetector, k);
+        mask.Dispose();
+        mask = new Mat(grayPrev.Size(), MatType.CV_8UC3, Scalar.All(0));
     }
 }
 
@@ -120,5 +163,30 @@ public static class MatEx
         (int)(framePrev.Height * 2 / 10d),
         (int)(framePrev.Width * 6 / 10d),
         (int)(framePrev.Height * 8 / 10d)));
+    }
+
+    /// <summary>
+    /// 格子状に分割
+    /// </summary>
+    /// <param name="target"></param>
+    /// <param name="col"></param>
+    /// <param name="row"></param>
+    /// <returns></returns>
+    public static Mat[,] Grid(this Mat target, int col, int row)
+    {
+        var matMatrix = new Mat[col,row];
+        for (var c = 0; c < col; c++)
+        {
+            for (var r = 0; r < row; r++)
+            {
+                var x = (double)target.Width / col * c;
+                var y = (double)target.Height / row * r;
+                var rect = new Rect((int)x, (int)y, target.Width / col, target.Height / row);
+                matMatrix[c,r] = target.SubMat(rect);
+            } 
+        }
+
+
+        return matMatrix; 
     }
 }

@@ -10,9 +10,9 @@ var colors = Enumerable
     .ToArray();
 
 // 検出する特徴点の最高数
-const int maxCorners = 100;
+const int maxCorners = 1000;
 // 特徴点のスコアの閾値。0~1で1が最高。
-const double qualityLevel = 0.3;
+const double qualityLevel = 0.2;
 // 特徴点間の最小距離
 const int minDistance = 7;
 // 特徴点の検出範囲を指定するマスク行列。nullだと画像全体で検出。
@@ -26,9 +26,12 @@ const bool useHarrisDetector = true;
 const double k = 0.04;
 
 // 最初のフレームの処理
-var path = @"";
-using var capture = new VideoCapture(path);
+//const string path = @"C:\Users\k_tak\Downloads\534-21-62-2下流調査_ガタツキ~後退.mp4";
+//const string path = @"C:\Users\k_tak\Downloads\534-21-62-2下流調査-ガタツキ部のみ.mp4";
 
+//const string path = @"C:\Users\k_tak\Downloads\Camera01-selected\VID_20230825_013822_10_011 - コピー_trimmed.mp4";
+const string path = @"C:\Users\k_tak\Downloads\boring_trimmed.mp4";
+using var capture = new VideoCapture(path);
 
 
 const int col = 5*2;

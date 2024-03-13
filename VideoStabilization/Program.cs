@@ -1,5 +1,6 @@
 ﻿using OpenCvSharp;
 
+const string videoPath = @"C:\Users\k_tak\Downloads\無題の動画 ‐ Clipchampで作成.mp4";
 using var cap = new VideoCapture(videoPath);
 
 using var cur = new Mat();

@@ -1,10 +1,25 @@
 ﻿using OpenCvSharp;
 
 // 入力ビデオを読み込む
-var basePath = @"";
-var path = @"";
-
-using var capture = new VideoCapture(Path.Combine(basePath, path));
+//var basePath = @"C:\Users\k_tak\Downloads";
+//var path = @"534-21-62-2下流調査-管路前進のみ.mp4";
+//var path = @"K-Proデータ-selected\K-PRO_0524\534-21-62-2.MP4";
+//var path = @"C:\Users\k_tak\Downloads\無題の動画 ‐ Clipchampで作成.mp4";
+//var path = @"C:\Users\k_tak\Downloads\『Googleフォト』スタビライズ　手ブレ補正前 歩きver. - from YouTube.mp4";
+//var path = @"C:\Users\k_tak\Downloads\534-21-62-2下流調査-ガタツキ部のみ.mp4";
+//var path = @"C:\Users\k_tak\Downloads\534-21-62-2_ガタツキ～後退.MP4";
+//var path = @"C:\Users\k_tak\Downloads\K-Proデータ-selected\K-PRO_0524\534-25-60下流調査.MP4";
+//var path = @"C:\Users\k_tak\Downloads\534-21-62-2下流調査-管路前進のみ.mp4";
+//var path = @"C:\Users\k_tak\Downloads\543-21-82-1直進のみ.mp4";
+//var path = @"C:\Users\k_tak\Downloads\Camera01-selected\VID_20230825_013822_10_011 - コピー_trimmed.mp4";
+//var path = @"C:\Users\k_tak\OneDrive\デスクトップ\screening_video\VID_20230825_013822_00_011(1).mp4";
+//var path = @"C:\Users\k_tak\Downloads\Camera01-selected\demo.mp4";
+//const string path = @"C:\Users\k_tak\OneDrive\画像\Screenpresso\2024-01-30_09h37_28.mp4";
+const string path = @"C:\Users\k_tak\Downloads\boring_trimmed.mp4";
+var basePath = Path.GetDirectoryName(path);
+//using var capture = new VideoCapture(@"C:\Users\k_tak\Downloads\534-21-62-2下流調査-管路前進のみ.mp4");
+using var capture = new VideoCapture(path);
+//using var capture = new VideoCapture(@"C:\Users\k_tak\Downloads\無題の動画 ‐ Clipchampで作成.mp4");
 
 var frameCount = (int)capture.Get(VideoCaptureProperties.FrameCount);
 var width = capture.Get(VideoCaptureProperties.FrameWidth);
@@ -116,7 +131,7 @@ for (int i = 0; i < frameCount - 1; i++)
 }
 
 // 平滑化のためのウィンドウサイズを設定
-var smoothingRadius = 100; // ウィンドウサイズは実際の動画によります
+var smoothingRadius = 30; // ウィンドウサイズは実際の動画によります
 
 // 平滑化された軌道を計算
 var smoothedTrajectoryX = new double[frameCount];
